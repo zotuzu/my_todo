@@ -150,6 +150,28 @@ class _TaskWidgetState extends State<TaskWidget> {
                                   ? Colors.white
                                   : Colors.grey),
                         ),
+                        if (widget.task.alarmTime != null)
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.alarm,
+                                size: 12,
+                                color: Colors.grey,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                DateFormat('MMM dd, yyyy hh:mm a')
+                                    .format(widget.task.alarmTime!),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: widget.task.isCompleted
+                                      ? Colors.white
+                                      : Colors.grey,
+                                ),
+                              ),
+                            ],
+                          ),
                       ],
                     ),
                   ),

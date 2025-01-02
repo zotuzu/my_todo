@@ -1,11 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../data/hive_data_store.dart';
 import '../models/task.dart';
 import '../view/home/home_view.dart';
+import 'controllers/notification_controller.dart';
 
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  /// Request notification permission
+  await Permission.notification.request();
+
+  /// Initialize notifications
+  await NotificationController.initializeNotification();
+
   /// Initial Hive DB
   await Hive.initFlutter();
 

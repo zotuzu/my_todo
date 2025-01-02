@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:my_todo/main.dart';
 import 'package:my_todo/models/task.dart';
 import 'package:my_todo/utils/constanst.dart';
+import 'package:my_todo/controllers/notification_controller.dart';
 
 import 'widgets/task_bottom_button.dart';
 import 'widgets/task_field_section.dart';
@@ -33,6 +34,7 @@ class _TaskViewState extends State<TaskView> {
   var subtitle;
   DateTime? time;
   DateTime? date;
+  DateTime? reminderTime;
 
   /// Show Selected Time As String Format
   String showTime(DateTime? time) {
@@ -98,6 +100,20 @@ class _TaskViewState extends State<TaskView> {
     }
   }
 
+  /// Schedule notification for the task
+  Future<void> _scheduleTaskNotification({
+    required String title,
+    required DateTime scheduleTime,
+  }) async {
+    final delay = scheduleTime.difference(DateTime.now());
+    Future.delayed(delay, () async {
+      await NotificationController.showNotification(
+        title: title,
+        body: 'Time to complete your task!',
+      );
+    });
+  }
+
   /// If any task already exist app will update it otherwise the app will add a new task
   dynamic isTaskAlreadyExistUpdateTask() {
     if (widget.taskControllerForTitle?.text != null &&
@@ -106,10 +122,20 @@ class _TaskViewState extends State<TaskView> {
         widget.taskControllerForTitle?.text = title;
         widget.taskControllerForSubtitle?.text = subtitle;
 
-        // widget.task?.createdAtDate = date!;
-        // widget.task?.createdAtTime = time!;
+        // Update alarm time
+        widget.task?.hasAlarm = reminderTime != null;
+        widget.task?.alarmTime = reminderTime;
 
         widget.task?.save();
+
+        // Schedule notification for updated task if reminder is set
+        if (reminderTime != null) {
+          _scheduleTaskNotification(
+            title: title,
+            scheduleTime: reminderTime!,
+          );
+        }
+
         Navigator.of(context).pop();
       } catch (error) {
         nothingEnterOnUpdateTaskMode(context);
@@ -121,8 +147,23 @@ class _TaskViewState extends State<TaskView> {
           createdAtTime: time,
           createdAtDate: date,
           subtitle: subtitle,
+          alarmTime: reminderTime,
         );
+
+        // Set alarm properties
+        task.hasAlarm = reminderTime != null;
+        task.alarmTime = reminderTime;
+
         BaseWidget.of(context).dataStore.addTask(task: task);
+
+        // Schedule notification for new task if reminder is set
+        if (reminderTime != null) {
+          _scheduleTaskNotification(
+            title: title,
+            scheduleTime: reminderTime!,
+          );
+        }
+
         Navigator.of(context).pop();
       } else {
         emptyFieldsWarning(context);
@@ -191,6 +232,7 @@ class _TaskViewState extends State<TaskView> {
   Widget _buildMiddleTextFieldsANDTimeAndDateSelection(
       BuildContext context, TextTheme textTheme) {
     return TaskFieldSection(
+      initialReminderTime: widget.task?.alarmTime,
       taskControllerForTitle: widget.taskControllerForTitle,
       taskControllerForSubtitle: widget.taskControllerForSubtitle,
       onTitleChanged: (value) {
@@ -203,6 +245,11 @@ class _TaskViewState extends State<TaskView> {
       onDatePressed: _onDatePressed,
       timeDisplay: showTime(time),
       dateDisplay: showDate(date),
+      onReminderTimeSelected: (DateTime? selectedReminderTime) {
+        setState(() {
+          reminderTime = selectedReminderTime;
+        });
+      },
     );
   }
 
